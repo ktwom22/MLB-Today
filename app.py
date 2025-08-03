@@ -3,29 +3,36 @@ import pandas as pd
 import pulp
 import requests
 from io import StringIO
+import os
 
 app = Flask(__name__)
 
+# Google Sheets CSV URL
 GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1aCccCQIU8Z5ve9QM8SrgG50hfD0WYYQmu-Z6fAt0TCw/gviz/tq?tqx=out:csv&gid=130416604"
 
 def clean_data(df):
     df.columns = df.columns.str.strip().str.upper()
+
     if "PROJECTED POINTS" in df.columns:
         df.rename(columns={"PROJECTED POINTS": "PROJECTE POINTS"}, inplace=True)
+
     required = {"NAME", "POS", "SALARY", "PROJECTE POINTS", "TEAM"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"Missing required columns: {missing}")
+
     df['SALARY'] = df['SALARY'].replace('[\\$,]', '', regex=True).astype(float)
     df['PROJECTE POINTS'] = pd.to_numeric(df['PROJECTE POINTS'], errors='coerce')
     df['POS'] = df['POS'].str.upper().str.strip()
     df['TEAM'] = df['TEAM'].str.upper().str.strip()
     df = df.dropna(subset=['NAME', 'SALARY', 'POS', 'PROJECTE POINTS', 'TEAM'])
     df['IS_HITTER'] = df['POS'] != 'P'
+
     return df
 
 def generate_lineup(df, excluded_lineups=[], stack_team=None, stack_size=0, exposure_counts=None, max_exposure=None, total_lineups=1):
     prob = pulp.LpProblem("MLB_Lineup", pulp.LpMaximize)
+
     player_vars = {
         row['NAME']: pulp.LpVariable(row['NAME'], cat='Binary')
         for _, row in df.iterrows()
@@ -48,8 +55,7 @@ def generate_lineup(df, excluded_lineups=[], stack_team=None, stack_size=0, expo
     prob += pulp.lpSum(player_vars[p] for p in hitters if p in player_vars) >= 8
 
     if stack_team and stack_size > 0:
-        stack_team = stack_team.upper()
-        team_players = df[df['TEAM'] == stack_team]['NAME']
+        team_players = df[df['TEAM'] == stack_team.upper()]['NAME']
         prob += pulp.lpSum(player_vars[p] for p in team_players if p in player_vars) >= stack_size
 
     for prev_lineup in excluded_lineups:
@@ -57,17 +63,19 @@ def generate_lineup(df, excluded_lineups=[], stack_team=None, stack_size=0, expo
 
     if exposure_counts and max_exposure:
         for player, count in exposure_counts.items():
-            if player in player_vars:
-                allowed = int(max_exposure * total_lineups)
-                if count >= allowed:
-                    prob += player_vars[player] == 0
+            if player in player_vars and count >= int(max_exposure * total_lineups):
+                prob += player_vars[player] == 0
 
     prob.solve()
 
-    lineup, total_salary_val, total_points_val, selected_players = [], 0, 0, set()
+    lineup = []
+    total_salary_val = 0
+    total_points_val = 0
+    selected_players = set()
+
     for p in player_vars:
         if player_vars[p].varValue == 1:
-            row = df.loc[df['NAME'] == p].iloc[0]
+            row = df[df['NAME'] == p].iloc[0]
             lineup.append({
                 'Name': p,
                 'Position': row['POS'],
@@ -89,9 +97,9 @@ def show_lineups():
         stack_size = int(request.args.get('stack', 0))
         exposure_pct = float(request.args.get('exposure', 100)) / 100.0
 
-        r = requests.get(GOOGLE_SHEET_CSV_URL)
-        r.raise_for_status()
-        df = pd.read_csv(StringIO(r.text))
+        response = requests.get(GOOGLE_SHEET_CSV_URL)
+        response.raise_for_status()
+        df = pd.read_csv(StringIO(response.text))
         df = clean_data(df)
 
         all_lineups = []
@@ -121,5 +129,7 @@ def show_lineups():
         return render_template("index.html", error=str(e), lineups=[], teams=[],
                                count=5, stack_team="", stack_size=0, exposure_pct=100)
 
+# Run the app — production-ready for Render
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
