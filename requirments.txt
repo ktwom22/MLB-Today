@@ -1,0 +1,4 @@
+Flask==2.3.3
+pandas==2.2.2
+pulp==2.7.0
+requests==2.31.0

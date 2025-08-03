@@ -1,0 +1,22 @@
+# Virtual environments
+venv/
+env/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+
+# Hidden files or OS junk
+.DS_Store
+Thumbs.db
+
+# Environment variables or secret config
+.env
+instance/
+
+# SQLite or other DB files
+*.db
+*.sqlite3
+
+# Logs (optional)
+*.log
