@@ -1,74 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <h3 style="color:red;">THIS IS LIVE</h3>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MLB Lineup Optimizer</title>
+    <title>MLB DraftKings Lineups</title>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>MLB Lineup Optimizer</h1>
-            <p>Generate optimized DraftKings lineups</p>
-        </div>
-    </header>
+    <div class="container">
+        <h1>MLB DraftKings Lineups</h1>
 
-    <main class="container">
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
+        <form method="get">
+            <label for="count">Number of lineups</label>
+            <input type="number" id="count" name="count" value="{{ count or 5 }}" min="1" max="100">
 
-        <form method="get" action="/">
-            <label>Number of Lineups:
-                <input type="number" name="count" value="{{ count or 5 }}" min="1" max="20">
-            </label>
+            <label for="team">Stack team</label>
+            <select id="team" name="team">
+                <option value="">-- Select Team --</option>
+                {% for team in teams %}
+                    <option value="{{ team }}" {% if team == stack_team %}selected{% endif %}>{{ team }}</option>
+                {% endfor %}
+            </select>
 
-            <label>Stack Team:
-                <select name="team">
-                    <option value="">-- None --</option>
-                    {% for team in teams %}
-                        <option value="{{ team }}" {% if team == stack_team %}selected{% endif %}>{{ team }}</option>
-                    {% endfor %}
-                </select>
-            </label>
+            <label for="stack">Min players from team</label>
+            <input type="number" id="stack" name="stack" value="{{ stack_size or 0 }}" min="0" max="9">
 
-            <label>Stack Size:
-                <input type="number" name="stack" value="{{ stack_size or 0 }}" min="0" max="10">
-            </label>
-
-            <label>Max Exposure (%):
-                <input type="number" name="exposure" value="{{ exposure_pct or 100 }}" min="10" max="100" step="10">
-            </label>
+            <label for="exposure">Max player exposure (%)</label>
+            <input type="number" id="exposure" name="exposure" value="{{ exposure_pct or 100 }}" min="1" max="100">
 
             <button type="submit">Generate</button>
         </form>
 
         {% for lineup in lineups %}
             <div class="lineup">
-                <div class="meta">
-                    <strong>Projected Points:</strong> {{ lineup.points | round(2) }} &nbsp;
-                    <strong>Salary:</strong> ${{ lineup.salary | round(0) }}
-                </div>
-                <table>
-                    <tr><th>Player</th><th>Pos</th><th>Team</th><th>Salary</th><th>Points</th></tr>
+                <h2>Lineup {{ loop.index }}</h2>
+                <p>Salary: ${{ lineup.salary | round(0) }}, Points: {{ lineup.points | round(1) }}</p>
+                <ul>
                     {% for player in lineup.players %}
-                        <tr>
-                            <td>{{ player.Name }}</td>
-                            <td>{{ player.Position }}</td>
-                            <td>{{ player.Team }}</td>
-                            <td>${{ player.Salary | round(0) }}</td>
-                            <td>{{ player.Points | round(2) }}</td>
-                        </tr>
+                        <li><strong>{{ player.Name }}</strong> ({{ player.Position }}) - ${{ player.Salary }}, {{ player.Team }}</li>
                     {% endfor %}
-                </table>
+                </ul>
             </div>
         {% endfor %}
-    </main>
-
-    <footer>
-        <p>&copy; 2025 MLB Lineup Tool</p>
-    </footer>
+    </div>
 </body>
 </html>
