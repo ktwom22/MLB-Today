@@ -2,70 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MLB DraftKings Lineups</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
+    <title>MLB Lineup Optimizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="bg-light">
-    <div class="container py-5">
-        <h1 class="mb-4 text-center">MLB DraftKings Lineups</h1>
-
-        <!-- Debug block -->
-        <div class="mb-4 p-3 bg-warning-subtle border rounded">
-            <strong>Debug Info:</strong><br>
-            Count: {{ count }}<br>
-            Stack Size: {{ stack_size }}<br>
-            Exposure %: {{ exposure_pct }}<br>
-            Teams: {{ teams }}
+<body>
+    <header>
+        <div class="container">
+            <h1>MLB Lineup Optimizer</h1>
+            <p>Generate optimized lineups using projection data</p>
         </div>
+    </header>
 
+    <main class="container">
         {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
+            <div class="error">{{ error }}</div>
         {% endif %}
 
-        <form method="get" class="row g-3 mb-5">
-            <div class="col-md-2">
-                <label for="count" class="form-label">Number of lineups</label>
-                <input type="number" class="form-control" id="count" name="count" min="1" max="50" value="{{ count | int }}">
-            </div>
-            <div class="col-md-3">
-                <label for="team" class="form-label">Stack team</label>
-                <select class="form-select" id="team" name="team">
-                    <option value="">-- Select Team --</option>
+        <form method="get" action="/">
+            <label>Number of Lineups:
+                <input type="number" name="count" value="{{ count or 5 }}" min="1" max="20">
+            </label>
+
+            <label>Stack Team:
+                <select name="team">
+                    <option value="">-- None --</option>
                     {% for team in teams %}
                         <option value="{{ team }}" {% if team == stack_team %}selected{% endif %}>{{ team }}</option>
                     {% endfor %}
                 </select>
-            </div>
-            <div class="col-md-2">
-                <label for="stack" class="form-label">Min players from team</label>
-                <input type="number" class="form-control" id="stack" name="stack" min="0" max="10" value="{{ stack_size | int }}">
-            </div>
-            <div class="col-md-2">
-                <label for="exposure" class="form-label">Max player exposure (%)</label>
-                <input type="number" class="form-control" id="exposure" name="exposure" min="1" max="100" value="{{ exposure_pct | int }}">
-            </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">Generate</button>
-            </div>
+            </label>
+
+            <label>Stack Size:
+                <input type="number" name="stack" value="{{ stack_size or 0 }}" min="0" max="10">
+            </label>
+
+            <label>Max Exposure (%):
+                <input type="number" name="exposure" value="{{ exposure_pct or 100 }}" min="10" max="100" step="10">
+            </label>
+
+            <button type="submit">Generate</button>
         </form>
 
-        {% for lu in lineups %}
-            {% set idx = loop.index %}
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Lineup {{ idx }}</h5>
-                    <small>Salary: ${{ lu.salary | round }}, Points: {{ lu.points | round(2) }}</small>
+        {% for lineup in lineups %}
+            <div class="lineup">
+                <div class="meta">
+                    <strong>Projected Points:</strong> {{ lineup.points | round(2) }} &nbsp;
+                    <strong>Salary:</strong> ${{ lineup.salary | round(0) }}
                 </div>
-                <ul class="list-group list-group-flush">
-                    {% for player in lu.players %}
-                        <li class="list-group-item">
-                            <strong>{{ player.Name }}</strong> ({{ player.Position }}) - ${{ player.Salary }}, {{ player.Team }}
-                        </li>
+                <table>
+                    <tr><th>Player</th><th>Pos</th><th>Team</th><th>Salary</th><th>Points</th></tr>
+                    {% for player in lineup.players %}
+                        <tr>
+                            <td>{{ player.Name }}</td>
+                            <td>{{ player.Position }}</td>
+                            <td>{{ player.Team }}</td>
+                            <td>${{ player.Salary | round(0) }}</td>
+                            <td>{{ player.Points | round(2) }}</td>
+                        </tr>
                     {% endfor %}
-                </ul>
+                </table>
             </div>
         {% endfor %}
-    </div>
+    </main>
+
+    <footer>
+        <p>&copy; {{ 2025 }} MLB Lineup Tool</p>
+    </footer>
 </body>
 </html>
