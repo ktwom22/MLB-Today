@@ -2,78 +2,86 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MLB DraftKings Lineups</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MLB Optimizer</title>
+    <!-- Link to the favicon using Flask's url_for function -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-
-    <!-- Local stylesheet -->
+    <!-- Link to the CSS using Flask's url_for function -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Bootstrap CSS via CDN (you can keep it or use local) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
-<body>
-    <header>
-        <div class="container">
-            <h1>MLB Lineup Optimizer</h1>
-            <p>Generate optimized DraftKings lineups</p>
-        </div>
-    </header>
+<body class="bg-light text-dark">
+    <div class="container py-5">
+        <h1 class="text-center mb-4">⚾ MLB DFS Lineup Optimizer</h1>
 
-    <main class="container">
-        {% if prompt %}
-            <p>Please make selections and click "Generate" to create lineups.</p>
-        {% endif %}
-
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
-
-        <form method="get" action="/">
-            <label>Number of Lineups:
-                <input type="number" name="count" value="{{ count or 5 }}" min="1" max="20">
-            </label>
-
-            <label>Stack Team:
-                <select name="team">
-                    <option value="">-- None --</option>
-                    {% for team in teams %}
-                        <option value="{{ team }}" {% if team == stack_team %}selected{% endif %}>{{ team }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-
-            <label>Stack Size:
-                <input type="number" name="stack" value="{{ stack_size or 0 }}" min="0" max="10">
-            </label>
-
-            <label>Max Exposure (%):
-                <input type="number" name="exposure" value="{{ exposure_pct or 100 }}" min="10" max="100" step="10">
-            </label>
-
-            <button type="submit">Generate</button>
+        <!-- Form to input lineup data -->
+        <form class="row g-3 mb-4" method="get">
+            <div class="col-md-3">
+                <label class="form-label">Lineups to Generate</label>
+                <input type="number" class="form-control" name="count" value="{{ count or 5 }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Stack Team (optional)</label>
+                <input type="text" class="form-control" name="team" value="{{ stack_team or '' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Stack Size</label>
+                <input type="number" class="form-control" name="stack" value="{{ stack_size or 0 }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Max Exposure (%)</label>
+                <input type="number" class="form-control" name="exposure" value="{{ exposure_pct or 100 }}">
+            </div>
+            <div class="col-12 text-center">
+                <button type="submit" class="btn btn-success mt-3">Generate Lineups</button>
+            </div>
         </form>
 
-        {% for lineup in lineups %}
-            <div class="lineup">
-                <h2>Lineup {{ loop.index }}</h2>
-                <p>Salary: ${{ lineup.salary | round(0) }}, Points: {{ lineup.points | round(1) }}</p>
-                <table>
-                    <tr><th>Player</th><th>Pos</th><th>Team</th><th>Salary</th><th>Points</th></tr>
-                    {% for player in lineup.players %}
-                        <tr>
-                            <td>{{ player.Name }}</td>
-                            <td>{{ player.Position }}</td>
-                            <td>{{ player.Team }}</td>
-                            <td>${{ player.Salary | round(0) }}</td>
-                            <td>{{ player.Points | round(2) }}</td>
-                        </tr>
-                    {% endfor %}
-                </table>
+        <!-- Show error message if any -->
+        {% if error %}
+            <div class="alert alert-danger text-center">
+                <strong>Error:</strong> {{ error }}
             </div>
-        {% endfor %}
-    </main>
+        {% endif %}
 
-    <footer>
-        <p>&copy; 2025 MLB Lineup Tool</p>
-    </footer>
+        {% if prompt %}
+            <div class="alert alert-info text-center">
+                Use the form above to generate lineups.
+            </div>
+        {% endif %}
+
+        <!-- Display generated lineups -->
+        {% if lineups %}
+            <h2 class="mb-4">Generated Lineups</h2>
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for lineup in lineups %}
+                    <div class="col">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <strong>Projected Points:</strong> {{ lineup.points }} |
+                                <strong>Salary:</strong> ${{ lineup.salary }}
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    {% for player in lineup.players %}
+                                        <li class="list-group-item">
+                                            <strong>{{ player.Position }}</strong> - {{ player.Name }}
+                                            ({{ player.Team }}) - ${{ player.Salary }} - {{ player.Points }} pts
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS (optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
