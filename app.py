@@ -85,6 +85,9 @@ def generate_lineup(df, excluded_lineups=[], stack_team=None, stack_size=0, expo
 @app.route('/', methods=['GET'])
 def show_lineups():
     try:
+        if not request.args:
+            return render_template("index.html", lineups=[], teams=[], count=5, stack_team="", stack_size=0, exposure_pct=100, prompt=True)
+
         count = int(request.args.get('count', 5))
         stack_team = request.args.get('team', '').strip().upper()
         stack_size = int(request.args.get('stack', 0))
@@ -116,11 +119,11 @@ def show_lineups():
         teams = sorted(df['TEAM'].unique())
         return render_template("index.html", lineups=all_lineups, teams=teams,
                                count=count, stack_team=stack_team,
-                               stack_size=stack_size, exposure_pct=int(exposure_pct * 100))
+                               stack_size=stack_size, exposure_pct=int(exposure_pct * 100), prompt=False)
 
     except Exception as e:
         return render_template("index.html", error=str(e), lineups=[], teams=[],
-                               count=5, stack_team="", stack_size=0, exposure_pct=100)
+                               count=5, stack_team="", stack_size=0, exposure_pct=100, prompt=False)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))

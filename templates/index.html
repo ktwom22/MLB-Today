@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>MLB DraftKings Lineups</title>
-    https://fonts.googleapis.com/css2?family=Open+Sans&display=swap
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+
+    <!-- Local stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -15,6 +19,10 @@
     </header>
 
     <main class="container">
+        {% if prompt %}
+            <p>Please make selections and click "Generate" to create lineups.</p>
+        {% endif %}
+
         {% if error %}
             <div class="error">{{ error }}</div>
         {% endif %}
