@@ -1,1 +1,13 @@
+/* Super obvious styles to test if CSS is loading */
+body {
+    background-color: black;
+    color: lime;
+    font-family: 'Open Sans', sans-serif;
+}
 
+h1 {
+    color: yellow;
+    font-size: 3rem;
+    text-align: center;
+    text-transform: uppercase;
+}
