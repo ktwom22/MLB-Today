@@ -138,9 +138,9 @@ def show_lineups():
                                count=5, stack_team="", stack_size=0, exposure_pct=100, prompt=False)
 
 # Route to serve the static test file
-@app.route('/test-file')
+@app.route('/style.css')
 def test_file():
-    return app.send_static_file('test.txt')  # Serve the test.txt file located in the static folder
+    return app.send_static_file('style.css')  # Serve the test.txt file located in the static folder
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
